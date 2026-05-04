@@ -31,6 +31,12 @@ Plugins/*/Intermediate/
 *.VC.db
 *.VC.opendb
 *.swp
+*.sln
+UpgradeLog.htm
+shadertoolsconfig.json
+
+# UE5 backup folder (crash recovery snapshots)
+Backup/
 
 # OS
 .DS_Store

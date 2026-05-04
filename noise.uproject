@@ -2,7 +2,7 @@
   "FileVersion": 3,
   "EngineAssociation": "5.7",
   "Category": "",
-  "Description": "",
+  "Description": "ЦВЕТ-ШУМ — first-person atmospheric horror-puzzle. Soviet NPP, night shift, April 1986.",
   "Modules": [
     {
       "Name": "noise",
@@ -21,6 +21,10 @@
       "SupportedTargetPlatforms": [
         "Win64"
       ]
+    },
+    {
+      "Name": "EnhancedInput",
+      "Enabled": true
     }
   ],
   "TargetPlatforms": [],

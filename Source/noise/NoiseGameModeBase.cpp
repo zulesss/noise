@@ -3,7 +3,7 @@
 #include "NoiseGameModeBase.h"
 
 #include "GameFramework/PlayerController.h"
-#include "Player/NoiseCharacter.h"
+#include "NoiseCharacter.h"
 
 ANoiseGameModeBase::ANoiseGameModeBase()
 {

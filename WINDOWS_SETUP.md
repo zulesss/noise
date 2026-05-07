@@ -1,6 +1,6 @@
 # WINDOWS_SETUP — ЦВЕТ-ШУМ (codename `noise`)
 
-Этот документ — checklist Windows-стороны после `git pull` свежего скелета. Linux dev box собирает text/config/git, UE5 Editor (только Windows у пользователя) делает .uasset/.umap/импорты.
+Install / one-time setup checklist для локальной Windows-машины с UE5.7 + VS 2022. Проект клонируется в `C:\Unreal Projects\noise` (НЕ в OneDrive). Claude Code работает прямо в этом каталоге.
 
 ---
 
@@ -16,7 +16,7 @@
 
 ## 1. Первый open проекта
 
-1. `cd` в `cvet-shum/` локально на Windows.
+1. `cd C:\Unreal Projects\noise` (или склонировать из `git@github.com:zulesss/noise.git` сюда).
 2. `git lfs pull` (один раз — подтянуть LFS-объекты, если на этом этапе уже были).
 3. ПКМ на `noise.uproject` → **"Switch Unreal Engine version"** → выбрать установленную 5.5+. (Если версия только одна — UE5 автоматически прицепится при двойном клике.)
 4. Двойной клик `noise.uproject`.
@@ -154,21 +154,23 @@ Day 2 task: брифовать `unreal-engineer` на структурирова
 
 ---
 
-## 6. Git protocol после Windows-side изменений
+## 6. Git protocol
 
-После того как импортнул paid packs / создал `LVL_Empty.umap` / собрал first BP_Player:
+Git — зона user'а. Claude правит файлы, не делает `commit`/`push`/`add`.
 
-1. UE5 → ПКМ на `Content/` → **Fix Up Redirectors in Folder** (обязательно перед каждым commit'ом если что-то rename/move'ил).
+Перед каждым commit'ом, после редакторской работы (импорт паков, создание `.umap`, изменение Blueprints):
+
+1. UE5 → ПКМ на `Content/` → **Fix Up Redirectors in Folder** (обязательно если что-то rename/move'ил).
 2. Закрыть Editor (некоторые .uasset не сохраняются на диск пока редактор открыт).
 3. `git status` — убедиться что нет `Saved/` `Intermediate/` `DerivedDataCache/` (они в `.gitignore`).
 4. `git add Content/<конкретные новые .uasset> Config/<обновлённые .ini> noise.uproject`. **НЕ** `git add -A`.
-5. `git commit -m "phase1 d1: <что сделал>"` (Co-Authored-By не нужен — это твоя работа).
+5. `git commit -m "phase1 d1: <что сделал>"`.
 6. `git push`.
 
-Опциональная sanity-проверка локально на Windows (если UE5 в PATH):
+Опциональная sanity-проверка перед commit (Claude может запустить):
 
 ```cmd
-"C:\Program Files\Epic Games\UE_5.5\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" ^
+"C:\Program Files\Epic Games\UE_5.7\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" ^
   "%CD%\noise.uproject" -run=CompileAllBlueprints -unattended
 ```
 
@@ -186,4 +188,4 @@ Exit 0 = ок. Любые ошибки — diagnose до push'а.
 
 ---
 
-*Версия 1.0 — 2026-05-04. Обновляется по факту разрешения Windows-side issues.*
+*Версия 1.1 — 2026-05-07. Адаптировано под локальный Windows-workflow (Claude Code в проекте).*

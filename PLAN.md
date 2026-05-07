@@ -2,7 +2,7 @@
 
 **Status:** DRAFT 2026-05-04 — design package locked, impl not yet started.
 **Engine:** Unreal Engine 5.5+
-**Repo:** /home/azukki/cvet-shum
+**Repo:** `C:\Unreal Projects\noise` (локальная Windows-разработка)
 **Project codename for filenames:** `noise`
 **In-game / docs display name:** `ЦВЕТ-ШУМ`
 **Length budget:** 14 дней (3 фазы × ~5 дней).
@@ -133,7 +133,7 @@ Conservative ставка. Если ощущается тягомотиной н
 Опциональная anomaly без процедурного крючка. Часть anomaly остаются на periphery — это часть дизайна. Не каждый игрок должен заметить всё.
 
 ### UE5 setup
-**Анриал на Windows у пользователя.** Linux dev box — без UE5 binary. Workflow: text/code/config/git делается на Linux, .uasset/.umap/импорты ассетов/playtest — на Windows-стороне. Headless validation на Linux недоступна — `CompileAllBlueprints` запускается пользователем на Windows вручную при необходимости.
+**Локальная Windows-разработка.** Editor + VS 2022 + UE5.7 + Claude Code в одном каталоге `C:\Unreal Projects\noise`. Headless validation (`CompileAllBlueprints`) доступна локально. Git — зона user'а; Claude правит файлы, user коммитит и пушит.
 
 ---
 
@@ -145,22 +145,8 @@ Conservative ставка. Если ощущается тягомотиной н
 
 ---
 
-## First impl delegation — что делать в новой сессии
+## First impl delegation (исторический раздел — Phase 1 D1-D2 пройдены)
 
-После открытия новой Claude Code сессии в `/home/azukki/cvet-shum/`:
-
-1. Read `.claude/context.md` + `PLAN.md` + 3 design docs (`docs/narrative/`, `docs/levels/`, `docs/feel/`)
-2. Day 1 Linux-side (text-only через `unreal-engineer` agent):
-   - `noise.uproject` (EngineAssociation 5.5)
-   - `Config/DefaultEngine.ini` — Lumen + Volumetric Fog defaults
-   - `Config/DefaultGame.ini` — project ID, default map placeholder
-   - `Config/DefaultInput.ini` — WASD + mouse + E + Shift + Tab, mouse smoothing OFF
-   - Folder structure (`Content/Audio/...`, `Content/Blueprints/...`, и т.д.) с `.gitkeep`
-   - `WINDOWS_SETUP.md` — checklist для пользователя на Windows-стороне
-3. Day 1 Windows-side (пользователь, GUI-based):
-   - Открыть `noise.uproject` в UE5 Editor 5.5+
-   - Создать пустой `LVL_Empty.umap` в `Content/Levels/`
-   - Импортировать packs (Cold War Bunker, Derelict Corridor, Niagara Examples Pack) — Soviet/Post Soviet World отвалился (см. ADR в `WINDOWS_SETUP.md §3` + `.claude/context.md`), функции покрыты Bunker + Sketchfab + Material decals
-   - Fix Up Redirectors на корневой `Content/`
-   - Push изменения обратно в git
-4. Day 2+ — `BP_Player` extends stock UE5 `Character` (FOV 75 lock, walk 240, head bob spec из atmosphere_plan) — Blueprint, делается на Windows-стороне с briefing через chat. GASP не используем (overkill для first-person slow-walk horror — third-person motion matching showcase).
+> Этот раздел описывает первоначальный bootstrap проекта. Phase 1 Day 1-2 уже выполнены — `noise.uproject`, configs, `ANoiseCharacter`/`ANoiseGameModeBase`, `BP_Player`/`BP_GameMode_Default` готовы и закоммичены. Smoke test пройден.
+>
+> Текущее состояние и next steps — см. **HANDOFF.md**.

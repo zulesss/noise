@@ -3,7 +3,7 @@
 **Display name:** ЦВЕТ-ШУМ
 **Codename for filenames:** `noise`
 **Engine:** Unreal Engine 5.5+ (5.7 для совместимости с Niagara Examples Pack UE5.7)
-**Repo:** /home/azukki/cvet-shum
+**Repo:** `C:\Unreal Projects\noise` (локальная Windows-разработка)
 **Branch:** main
 **Build target:** Windows packaged build
 **Cost budget:** $0 (всё owned или free)
@@ -13,14 +13,14 @@
 
 ## UE5 setup
 
-- **UE5 binary location:** на Windows-машине пользователя. Linux dev box (этот) **не имеет UE5 binary** — headless validation (`CompileAllBlueprints`) невозможна. Workflow: Linux = code/config/git, Windows = open project in UE5 Editor + manual playtest. Git — мост между средами.
-- **UE5 version:** 5.5 (минимум; пользователь может bump до 5.6/5.7 через `EngineAssociation` в `.uproject`). Niagara Examples Pack 5.7 потребует engine 5.7 — bump перед import'ом.
+- **Локальная Windows-разработка.** Editor + VS 2022 + UE5.7 binary под рукой. Headless validation (`CompileAllBlueprints` через `UnrealEditor-Cmd.exe`) доступна локально.
+- **UE5 version:** 5.7 (актуально на этой машине; минимум поддерживаемый — 5.5). Niagara Examples Pack 5.7 требует engine 5.7.
 - **Plugins required (в `.uproject`):**
   - `Niagara` (default ON в UE5)
   - `EnhancedInput` (UE5.5+ default — для Phase 2 Input Actions)
   - `ModelingToolsEditorMode` (для whitebox layout в Phase 1)
 - **Movement:** стоковый UE5 `Character` + custom `BP_Player`. **GASP (Game Animation Sample Project) не используем** — это third-person motion matching showcase, для slow-walk first-person horror без traversal/jump/crouch overkill (~5 GB ассетов с 0% полезной поверхности).
-- **Project file:** `noise.uproject` (создан Phase 1 Day 1 — text-only setup на Linux)
+- **Project file:** `noise.uproject` (создан Phase 1 Day 1)
 
 ---
 
@@ -121,15 +121,12 @@ Content/
 
 ## Workflow
 
-- **Parallel impl:** через `Agent({isolation: "worktree"})` — Claude автоматически создаёт worktree per agent. См. PLAN.md "Parallel streams" — 3 streams (Level / Mechanics / Audio).
-- **Validation:** UE5 binary не доступен на Linux. Проверка корректности проекта — через manual open в UE5 Editor на Windows (Editor покажет ошибки в Output Log при загрузке). Headless `CompileAllBlueprints` доступен только если пользователь запустит локально на Windows из cmd.
-- **Smoke test:** manual playtest на Windows после Phase 1 D4 milestone (PIE — Play In Editor, или standalone build).
-- **Git protocol:**
-  - `git pull --rebase` перед commit'ом
-  - `git add <specific files>` — НЕ `git add -A` (зацепит /Saved/ /Intermediate/ /DerivedDataCache/)
-  - Commits как `zulesss <viktorpostemskij@gmail.com>` (см. memory `user_git_identity.md`)
-  - Karpathy self-check на >20 строк текстового кода (см. unreal-engineer agent в `~/.claude/agents/`)
-  - Push после commit'а — рассмотреть post-commit hook аналогично vgate'у если будет полезно
+- **Code only via `unreal-engineer` agent.** C++/Build.cs/.uproject правки делегируются агенту, Claude сам код не пишет (per global CLAUDE.md). Markdown-доки / `.ini` / readme-style файлы Claude может править напрямую.
+- **Git — зона user'а.** Claude не делает `commit`/`push`/`add`. Может выполнить `git status`/`diff`/`log` для контекста и подсказать что включить в коммит / какой message. Сам коммит и пуш — user.
+- **Validation:** Editor + headless `CompileAllBlueprints` доступны локально. Smoke test через PIE (Play In Editor) после крупных изменений.
+- **Parallel impl:** через `Agent({isolation: "worktree"})` если нужны независимые streams. См. PLAN.md "Parallel streams" — 3 streams (Level / Mechanics / Audio).
+- **Karpathy self-check** на >20 строк кода — внутри `unreal-engineer` агента.
+- **MCP для UE** — установлен `ChiR24/Unreal_mcp` (плагин `Plugins/McpAutomationBridge/`, project-level `.mcp.json`, Native HTTP на `localhost:3000`). Включить плагин: Edit → Project Settings → Plugins → MCP Automation Bridge → Enable Native MCP. Issue #291 fix для UE5.7 применён локально (см. CHANGELOG в плагине). Open issues #232 (WebSocket bridge на Win+5.7) обходим через Native HTTP вместо npx bridge. #230 (crash on console command) — workaround = не использовать MCP console-cmd tool.
 
 ---
 

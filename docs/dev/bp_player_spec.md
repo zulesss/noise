@@ -20,10 +20,10 @@
 
 ---
 
-## 2. Windows-side one-time setup
+## 2. One-time setup (Editor / VS)
 
 1. Установить **Visual Studio 2022 Community** с workload "Game development with C++". Проверить components: MSVC v143, Windows 10/11 SDK, .NET desktop dev (для UnrealBuildTool).
-2. `git pull` — на Windows pull origin/main (Source/ folder + uproject Modules section).
+2. Убедиться что Source/ + `noise.uproject` Modules section на месте (`git status` должен быть чистым).
 3. Двойной клик `noise.uproject` в Explorer'е — UE5 покажет диалог:
    > "The following modules are missing or built with a different engine version: noise. Would you like to rebuild them now?"
 
@@ -105,8 +105,8 @@ Per-map override — через World Settings → GameMode Override на кон
 - Применимо к: walk speeds, head bob amplitudes/freqs, mouse sensitivity, pitch limits, FOV.
 
 ### Architectural change (engineer scope)
-- Edit `Source/noise/Player/NoiseCharacter.h` или `.cpp`.
-- Push на main (Linux-side) → user pull (Windows) → Editor toolbar **Compile** (Live Coding) или close → rebuild → reopen.
+- Edit `Source/noise/NoiseCharacter.h` или `.cpp` через `unreal-engineer` агента.
+- В Editor toolbar **Compile** (Live Coding) или close Editor → rebuild через двойной клик `noise.uproject` (или VS) → reopen.
 - Применимо к: новые UPROPERTYs, новые input handlers, изменения tick-логики, добавление компонентов.
 
 ---

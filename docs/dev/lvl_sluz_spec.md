@@ -408,7 +408,7 @@ Per layout §2.1.e — лампа мигает раз в 45-90 сек. Это **
 
 1. **UE5 Editor:** File → **Save All**.
 2. Закрыть Editor.
-3. Проверить changes (GitHub Desktop или CLI):
+3. Проверить changes:
    ```
    git status
    ```

@@ -20,6 +20,12 @@ StagedBuilds/
 Plugins/*/Binaries/
 Plugins/*/Intermediate/
 
+# MCP plugin (third-party dev-tool, install per machine)
+Plugins/McpAutomationBridge/
+
+# MCP project-level config (machine-specific paths)
+.mcp.json
+
 # IDE / Editor
 .vs/
 .idea/
@@ -32,7 +38,7 @@ Plugins/*/Intermediate/
 *.VC.opendb
 *.swp
 *.sln
-UpgradeLog.htm
+UpgradeLog*.htm
 shadertoolsconfig.json
 
 # UE5 backup folder (crash recovery snapshots)

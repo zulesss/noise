@@ -18,15 +18,14 @@
 
 | Где | Что |
 |---|---|
-| Linux dev box (Claude Code) | `/home/azukki/cvet-shum` — авторинг текста, design docs, C++ source через `unreal-engineer` агента, git CLI |
-| Windows machine | `C:\Unreal Projects\noise` — UE5.7 Editor, VS 2022 Community для C++ compile, manual playtest |
+| Local dev machine (Windows) | `C:\Unreal Projects\noise` — UE5.7 Editor, VS 2022 Community для C++ compile, Claude Code работает прямо в этом каталоге, manual playtest |
 | GitHub remote | `git@github.com:zulesss/noise.git` (или HTTPS) |
 
-**Workflow:** Linux пишет text/code/config/git → push → Windows pull → UE Editor build/play → push back.
+**Workflow:** Claude редактирует файлы (markdown / config / C++ через `unreal-engineer` агента) → user открывает UE Editor / собирает / тестит → user сам коммитит и пушит. **Git — зона пользователя**, Claude его не трогает (кроме `status/diff/log` для контекста).
 
-UE5 binary **только** на Windows. Linux dev box без UnrealEditor — headless validation (`CompileAllBlueprints`) **недоступна**. Все compile errors разрешаются на Windows-стороне с copy-paste error log'а в чат.
+UE5 binary под рукой — headless validation (`CompileAllBlueprints`) доступна локально. Compile errors разрешаются на месте.
 
-См. [WINDOWS_SETUP.md](WINDOWS_SETUP.md) — полный one-time setup checklist.
+См. [WINDOWS_SETUP.md](WINDOWS_SETUP.md) — one-time install checklist (UE / VS / LFS).
 
 ---
 
@@ -48,7 +47,7 @@ UE5 binary **только** на Windows. Linux dev box без UnrealEditor — 
 - **VS 2022 (17.x), не VS 2026 (18.x).** UE5.7 официально поддерживает только 2022. VS 2026 ломал VisualStudioTools plugin RulesError + Windows env-too-long.
 - **`VisualStudioTools` plugin disabled** в `noise.uproject` — broken plugin в user's UE5.7 install (RulesError при парсинге module rules). Не включать обратно даже если wizard re-enables.
 - **Flat C++ структура** — все классы в `Source/noise/` root, не в Player/ + Game/ subfolders. UE5.7 UBT не резолвит `#include "Player/X.h"` из subfolders без явного `PrivateIncludePaths` config'а в Build.cs. Когда будет 10+ классов — рассмотрим Public/Private split.
-- **MCP для UE — deferred** до Phase 2+. Все варианты alpha-grade, плюс Linux→Windows network proxy сложен. Текущий text-spec workflow optimal для Phase 1.
+- **MCP для UE — установлен 2026-05-07.** ChiR24/Unreal_mcp (`Plugins/McpAutomationBridge/`), Native HTTP transport на `localhost:3000`, project-level `.mcp.json`. Локальный патч для UE5.7 (issue #291) применён в C++ исходниках плагина перед копированием. Открытые upstream issues #232 (WebSocket bridge bug) обходим через Native HTTP, #230 (crash on console command) — workaround = не вызывать MCP console-cmd tool.
 
 ---
 
@@ -88,7 +87,7 @@ UE5 binary **только** на Windows. Linux dev box без UnrealEditor — 
 - [docs/feel/atmosphere_plan.md](docs/feel/atmosphere_plan.md) — 4-layer sound stack, post-process timeline, camera/movement spec, TTS pipeline
 - [docs/dev/bp_player_spec.md](docs/dev/bp_player_spec.md) — C++ ANoiseCharacter contract (workflow doc для Windows-стороны)
 - [docs/dev/lvl_sluz_spec.md](docs/dev/lvl_sluz_spec.md) — Шлюз whitebox spec, 480 строк, 14 секций
-- [WINDOWS_SETUP.md](WINDOWS_SETUP.md) — Windows-side checklist
+- [WINDOWS_SETUP.md](WINDOWS_SETUP.md) — install checklist (UE / VS / LFS / plugins)
 
 ---
 
@@ -168,7 +167,7 @@ UE5 binary **только** на Windows. Linux dev box без UnrealEditor — 
 - **`TObjectPtr<...>`** — UE5.5+ idiom для UPROPERTY pointers. Использовать вместо raw `T*` для UPROPERTY'и.
 
 ### 7.4 Workflow
-- **Force-push был использован однократно** для clean reset (OneDrive→C:\Unreal Projects/). Избегать в будущем — теряет history.
+- **Force-push был использован однократно** для clean reset (OneDrive → `C:\Unreal Projects\`). Историческая разовая операция — избегать впредь.
 - **User commit message "123"** в `9cd614e8` — bad pattern, напоминать про meaningful commit messages.
 - **Maps & Modes** UE5 5.7 saves в `Config/DefaultEngine.ini` (не DefaultGame.ini). Если ищешь EditorStartupMap — там.
 
@@ -196,22 +195,43 @@ UE5 binary **только** на Windows. Linux dev box без UnrealEditor — 
 - `Config/DefaultEngine.ini` — render + audio
 - `Config/DefaultInput.ini` — WASD + Mouse + E/Shift/Tab mappings
 
-**Memory** (Linux side):
-- `~/.claude/projects/-home-azukki-cvet-shum/memory/MEMORY.md` — Claude memory pointers
-- `~/.claude/projects/-home-azukki-cvet-shum/memory/project_ue5_workflow.md` — UE5 on Windows note
+**Memory** (локально на Windows):
+- `C:\Users\vikto\.claude\projects\C--Unreal-Projects-noise\memory\MEMORY.md` — Claude memory pointers
+- Здесь же — feedback / project / user / reference записи по этому проекту
+
+---
+
+## 8.1. Установка MCP-плагина на новой машине (рецепт)
+
+`Plugins/McpAutomationBridge/` и `.mcp.json` — в `.gitignore` (per-machine dev-tool, не в репо). Чтобы повторить установку:
+
+1. Установить Node.js 18+ (`winget install OpenJS.NodeJS.LTS`) — нужен только если будем использовать npx bridge transport. Для Native HTTP можно пропустить.
+2. `git clone --depth 1 https://github.com/ChiR24/Unreal_mcp.git C:\Temp\Unreal_mcp_clone`
+3. **Применить локальные патчи под UE5.7** (если ещё актуальны — проверить upstream):
+   - `McpAutomationBridge_EffectHandlers.cpp` ~1750-1760 (issue #291): блок `#if ENGINE_MAJOR_VERSION == 5` вокруг `SetVolumetricFog(true) / SetVolumetricFogScatteringDistribution / SetVolumetricFogExtinctionScale` → разбить на `< 7` (старые setters) / `>= 7` (прямое присвоение `bEnableVolumetricFog`, `VolumetricFogScatteringDistribution`, `VolumetricFogExtinctionScale` + `MarkRenderStateDirty()`)
+   - `McpPropertyReflection.cpp` строка 9 — должна содержать `#include "UObject/TextProperty.h"` (на 2026-05-07 уже была в main)
+   - `McpHandlerUtils.cpp` строка 10 — должна содержать `#include "EngineUtils.h"` (на 2026-05-07 уже была в main)
+   - `McpSafeOperations.h:221` (5.7 EPromptReturnCode regression — не отслежен upstream): `FEditorFileUtils::PromptForCheckoutAndSave(...)` теперь возвращает enum `EPromptReturnCode`. Обернуть `#if ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION >= 7` ветка с `== FEditorFileUtils::PR_Success`, fallback на старую signature для ≤5.6. PR_Success=0 — прямой каст в bool инвертировал бы семантику.
+   - `McpAutomationBridge_TextureHandlers.cpp:286` — тот же паттерн, тот же fix.
+4. Скопировать `plugins/McpAutomationBridge/` целиком в `C:\Unreal Projects\noise\Plugins\McpAutomationBridge\`
+5. Создать `C:\Unreal Projects\noise\.mcp.json`:
+   ```json
+   {"mcpServers":{"unreal-engine":{"type":"http","url":"http://localhost:3000/mcp"}}}
+   ```
+6. Открыть `noise.uproject` → UE предложит rebuild plugin → Yes → ждать (5-10 мин первый раз)
+7. Editor → Edit → Project Settings → Plugins → MCP Automation Bridge → ✅ Enable Native MCP (port: 3000) → restart Editor
+8. Restart Claude Code в корне проекта — `.mcp.json` подхватится, появится tool `unreal-engine`
 
 ---
 
 ## 9. Workflow conventions
 
-- **Code only via `unreal-engineer` agent** (per global CLAUDE.md analog rule for UE5 — все code-files через agent, не самостоятельно)
-- **Что МОЖНО делать самому без agent**: читать файлы, `grep`/`find`, `git status/diff/log/commit`, редактировать markdown-доки + PLAN.md + context.md, коммитить + пушить уже написанный agent'ом код
-- **Никаких `git add -A`** — specific files only (зацепит `Saved/`/`Intermediate/`)
-- **Commit format:** `phase1 d2: ...`, `ADR: ...`, `feat: ...`, `fix: ...`. Co-Authored-By не используем (matches user's existing style)
-- **Закрывать UE Editor** перед commit'ом
-- **`git pull --rebase`** перед push, не plain `pull` (избегаем merge commits)
-- **Pull через GitHub Desktop** на Windows — для повседневной работы, CLI git только для diverged history / force-push / rebase
-- **MCP для UE** — deferred до Phase 2+, не настраиваем сейчас
+- **Code only via `unreal-engineer` agent** (per global CLAUDE.md — все C++/Build.cs/.uproject правки через agent, не самостоятельно). Markdown-доки / PLAN.md / context.md / .ini — Claude может править сам.
+- **Git — зона user'а.** Claude не делает `git commit`, `git push`, `git add`. Claude может: `git status`, `git diff`, `git log` (для контекста), а также подсказывать какие файлы стоит включить в коммит и какой message написать. Коммит/пуш делает user.
+- **Никаких `git add -A`** (когда user коммитит) — specific files only, иначе зацепит `Saved/` / `Intermediate/`.
+- **Commit format:** `phase1 d2: ...`, `ADR: ...`, `feat: ...`, `fix: ...`. Co-Authored-By не используем.
+- **Закрывать UE Editor** перед commit'ом — некоторые `.uasset` сохраняются на диск только при close.
+- **MCP для UE** — установлен (см. §3.2). Plugin live в `Plugins/McpAutomationBridge/`, Native HTTP transport `localhost:3000`, project-level `.mcp.json`.
 
 ---
 
@@ -224,7 +244,7 @@ UE5 binary **только** на Windows. Linux dev box без UnrealEditor — 
 - **Walk speed 240** — recalibrate playtest D5-6 (240 → 300 если тягомотина, не 480)
 - **EV100 = 10** в PostProcess Volume — calibrate playtest'ом, atmosphere_plan §3 предполагает 10-12
 - **Level streaming vs single map** — решить на D7 когда все 4 levels готовы
-- **MCP для UE** — Phase 2+, ChiR24/Unreal_mcp как OSS-кандидат если зрелость подойдёт
+- **MCP для UE** — установлен 2026-05-07 (см. §3.2 + Workflow conventions §9).
 
 ---
 
